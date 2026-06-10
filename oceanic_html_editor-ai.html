@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oceanic - Professional HTML WYSIWYG Web Builder</title>
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Config for Custom Ocean Theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ocean: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49', // Ultra dark blue
+            },
+            aquamarine: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- React & ReactDOM (UMD CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone compiler to process JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Custom premium scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+
+    /* Animated grid for canvas drop indicators */
+    .canvas-grid {
+      background-size: 20px 20px;
+      background-image: radial-gradient(circle, #38bdf8 1px, transparent 1px);
+    }
+    
+    /* Drop Target Indicator Pulse */
+    .drag-hover-zone {
+      border: 2px dashed #06b6d4;
+      background-color: rgba(6, 182, 212, 0.08);
+      transform: scale(0.995);
+      transition: all 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 antialiased font-sans h-screen overflow-hidden">
+
+  <!-- React mounting point -->
+  <div id="root" class="h-full"></div>
+
+  <!-- Main Application Script -->
+  <script type="text/babel" data-type="module">
+    // Direct modular imports from Firebase v10 Web SDK CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, child, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const { useState, useEffect, useRef, useTransition } = React;
+
+    // Explicit Database Config from instructions
+    const firebaseConfig = {
+      apiKey: "AIzaSyC03tbgzBGHp8gsE3SvSLwJKEMEpHg8XK4",
+      authDomain: "k-realtor.firebaseapp.com",
+      databaseURL: "https://k-realtor-default-rtdb.firebaseio.com",
+      projectId: "k-realtor",
+      storageBucket: "k-realtor.firebasestorage.app",
+      messagingSenderId: "319285320167",
+      appId: "1:319285320167:web:749f584c64ad7b84c78542",
+      measurementId: "G-WGR3L5CJK6"
+    };
+
+    // Initialize Firebase Services
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const provider = new GoogleAuthProvider();
+
+    // Default template configurations
+    const TEMPLATES = [
+      {
+        id: 'tpl_portfolio',
+        title: 'Minimalist Ocean Portfolio',
+        elements: [
+          {
+            id: 'el_1',
+            type: 'heading',
+            content: 'CREATIVE BLUEPRINTS FOR THE NEXT WEB',
+            styles: {
+              fontSize: 'text-sm font-semibold tracking-widest text-cyan-400',
+              textColor: '#22d3ee',
+              textAlign: 'text-center',
+              backgroundColor: 'transparent',
+              padding: 'p-2',
+              margin: 'mt-8 mb-2',
+              borderRadius: 'rounded-none'
+            }
+          },
+          {
+            id: 'el_2',
+            type: 'heading',
+            content: 'Crafting Exquisite Visual Experiences',
+            styles: {
+              fontSize: 'text-4xl font-extrabold text-white',
+              textColor: '#ffffff',
+              textAlign: 'text-center',
+              backgroundColor: 'transparent',
+              padding: 'p-2',
+              margin: 'mb-4',
+              borderRadius: 'rounded-none'
+            }
+          },
+          {
+            id: 'el_3',
+            type: 'text',
+            content: 'A comprehensive, cloud-driven portfolio built using the Ocean Blue design framework. Tap, arrange, and deploy your design live with absolute layout fidelity.',
+            styles: {
+              fontSize: 'text-base font-light text-slate-300 max-w-xl mx-auto',
+              textColor: '#cbd5e1',
+              textAlign: 'text-center',
+              backgroundColor: 'transparent',
+              padding: 'p-4',
+              margin: 'mb-8',
+              borderRadius: 'rounded-none'
+            }
+          },
+          {
+            id: 'el_4',
+            type: 'button',
+            content: 'Explore Portfolio Solutions',
+            styles: {
+              fontSize: 'text-sm font-medium',
+              textColor: '#0f172a',
+              textAlign: 'text-center',
+              backgroundColor: '#06b6d4',
+              padding: 'py-3 px-6',
+              margin: 'mx-auto mb-12 block',
+              borderRadius: 'rounded-full'
+            },
+            action: {
+              type: 'alert',
+              value: 'Entering Developer Ecosystem Mode!'
+            }
+          }
+        ]
+      },
+      {
+        id: 'tpl_saas',
+        title: 'SaaS Product Showcase',
+        elements: [
+          {
+            id: 'el_saas_1',
+            type: 'heading',
+            content: 'DEPLOY SITES 10X FASTER',
+            styles: {
+              fontSize: 'text-xs font-bold tracking-wider text-blue-400',
+              textColor: '#60a5fa',
+              textAlign: 'text-left',
+              backgroundColor: 'transparent',
+              padding: 'p-1',
+              margin: 'mt-6 mb-1',
+              borderRadius: 'rounded-none'
+            }
+          },
+          {
+            id: 'el_saas_2',
+            type: 'heading',
+            content: 'Deep Ocean Analytics Interface',
+            styles: {
+              fontSize: 'text-3xl font-bold text-white',
+              textColor: '#ffffff',
+              textAlign: 'text-left',
+              backgroundColor: 'transparent',
+              padding: 'p-1',
+              margin: 'mb-4',
+              borderRadius: 'rounded-none'
+            }
+          },
+          {
+            id: 'el_saas_card',
+            type: 'card',
+            title: 'Enterprise Scalability Matrix',
+            content: 'Leverage decentralized nodes with a guaranteed 99.99% real-time connection uptime across global CDNs.',
+            image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
+            styles: {
+              backgroundColor: '#1e293b',
+              textColor: '#f1f5f9',
+              padding: 'p-6',
+              margin: 'mb-6',
+              borderRadius: 'rounded-xl'
+            }
+          },
+          {
+            id: 'el_saas_btn',
+            type: 'button',
+            content: 'Get Started Instantly',
+            styles: {
+              fontSize: 'text-sm font-semibold',
+              textColor: '#ffffff',
+              textAlign: 'text-center',
+              backgroundColor: '#3b82f6',
+              padding: 'py-3 px-8',
+              margin: 'mb-4 block w-full sm:w-auto',
+              borderRadius: 'rounded-lg'
+            },
+            action: {
+              type: 'link',
+              value: 'https://github.com'
+            }
+          }
+        ]
+      }
+    ];
+
+    // Standard default starter elements for a new project
+    const STARTER_ELEMENTS = [
+      {
+        id: 'st_1',
+        type: 'heading',
+        content: 'Oceanic Canvas Live',
+        styles: {
+          fontSize: 'text-4xl font-black text-white tracking-tight',
+          textColor: '#ffffff',
+          textAlign: 'text-center',
+          backgroundColor: 'transparent',
+          padding: 'p-2',
+          margin: 'mt-12 mb-2',
+          borderRadius: 'rounded-none'
+        }
+      },
+      {
+        id: 'st_2',
+        type: 'text',
+        content: 'Drag components from the right sidebar panel directly onto this canvas, or click any element here to customize colors, dimensions, borders, and interaction actions live!',
+        styles: {
+          fontSize: 'text-sm text-slate-400 max-w-lg mx-auto',
+          textColor: '#94a3b8',
+          textAlign: 'text-center',
+          backgroundColor: 'transparent',
+          padding: 'p-2',
+          margin: 'mb-6',
+          borderRadius: 'rounded-none'
+        }
+      },
+      {
+        id: 'st_3',
+        type: 'button',
+        content: 'Interactive Action Trigger',
+        styles: {
+          fontSize: 'text-sm font-semibold',
+          textColor: '#0f172a',
+          textAlign: 'text-center',
+          backgroundColor: '#06b6d4',
+          padding: 'py-2.5 px-6',
+          margin: 'mx-auto block mb-12',
+          borderRadius: 'rounded-lg'
+        },
+        action: {
+          type: 'alert',
+          value: 'Hello! You have triggered the interactive button in Preview Mode!'
+        }
+      }
+    ];
+
+    function App() {
+      // Authentication States
+      const [user, setUser] = useState(null);
+      const [authLoading, setAuthLoading] = useState(true);
+
+      // Workspace States
+      const [elements, setElements] = useState(STARTER_ELEMENTS);
+      const [selectedElementId, setSelectedElementId] = useState(null);
+      const [canvasScale, setCanvasScale] = useState(100);
+      const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+      const [editorMode, setEditorMode] = useState('edit'); // 'edit' or 'preview'
+      
+      // Collaboration & Multi-User State
+      const [roomId, setRoomId] = useState('');
+      const [activeRoom, setActiveRoom] = useState(null);
+      const [chatMessages, setChatMessages] = useState([]);
+      const [chatText, setChatText] = useState('');
+
+      // Storage Lists & State
+      const [savedDesigns, setSavedDesigns] = useState([]);
+      const [savedTemplates, setSavedTemplates] = useState([]);
+      const [currentDesignTitle, setCurrentDesignTitle] = useState('My Untitled Masterpiece');
+      const [currentDesignId, setCurrentDesignId] = useState(null);
+      const [showSaveDropdown, setShowSaveDropdown] = useState(false);
+      
+      // Toast notifications
+      const [toasts, setToasts] = useState([]);
+
+      // Monitor Drag state
+      const [dragOverIndex, setDragOverIndex] = useState(null);
+
+      // Track active state of Firebase Listeners
+      const currentRoomRef = useRef(null);
+
+      // Right panel sub-tabs ("palette" vs "ai_generator")
+      const [rightSidebarTab, setRightSidebarTab] = useState('palette');
+
+      // AI Gemini Generation State
+      const [aiComponentPrompt, setAiComponentPrompt] = useState('');
+      const [isGeneratingComponent, setIsGeneratingComponent] = useState(false);
+      const [aiCopyTone, setAiCopyTone] = useState('catchy');
+      const [aiCopyInstructions, setAiCopyInstructions] = useState('');
+      const [isOptimizingCopy, setIsOptimizingCopy] = useState(false);
+
+      // Show temporary custom toasts to avoid browser popups
+      const showToast = (message, type = 'success') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+          setToasts(prev => prev.filter(t => t.id !== id));
+        }, 4000);
+      };
+
+      // Watch Authentication State changes
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setAuthLoading(false);
+          if (currentUser) {
+            showToast(`Welcome back, ${currentUser.displayName || 'Creator'}!`);
+            loadUserData(currentUser.uid);
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
+      // Load Saved Designs & Templates from Firebase RTDB
+      const loadUserData = (userId) => {
+        const designsRef = ref(db, `users/${userId}/designs`);
+        onValue(designsRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            setSavedDesigns(list);
+          } else {
+            setSavedDesigns([]);
+          }
+        });
+
+        const templatesRef = ref(db, `users/${userId}/templates`);
+        onValue(templatesRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            setSavedTemplates(list);
+          } else {
+            setSavedTemplates([]);
+          }
+        });
+      };
+
+      // Handle Authentication Logins
+      const loginWithGoogle = async () => {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          setUser(result.user);
+        } catch (error) {
+          showToast(error.message, 'error');
+        }
+      };
+
+      const handleLogOut = async () => {
+        try {
+          await signOut(auth);
+          setUser(null);
+          setSavedDesigns([]);
+          setSavedTemplates([]);
+          showToast("Logged out successfully");
+        } catch (error) {
+          showToast(error.message, 'error');
+        }
+      };
+
+      // Handle Realtime Collaborative Synchronization (Multi-user Room Mode)
+      const joinCollaborationRoom = (idToJoin) => {
+        const cleanedRoomId = idToJoin.trim().toLowerCase();
+        if (!cleanedRoomId) {
+          showToast("Please specify a valid Room Key", "error");
+          return;
+        }
+
+        // Leave existing room listener if registered
+        if (currentRoomRef.current) {
+          currentRoomRef.current();
+        }
+
+        const roomRef = ref(db, `rooms/${cleanedRoomId}`);
+        const unsubscribe = onValue(roomRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            if (val.elements) {
+              setElements(val.elements);
+            }
+            if (val.title) {
+              setCurrentDesignTitle(val.title);
+            }
+          }
+        });
+
+        currentRoomRef.current = unsubscribe;
+        setActiveRoom(cleanedRoomId);
+        showToast(`Connected to Dynamic Collaboration Room: "${cleanedRoomId}"`);
+      };
+
+      const leaveCollaborationRoom = () => {
+        if (currentRoomRef.current) {
+          currentRoomRef.current();
+          currentRoomRef.current = null;
+        }
+        setActiveRoom(null);
+        showToast("Switched back to standalone offline sandbox");
+      };
+
+      // Keep Firebase Database synced if Room session is active
+      const updateCanvasData = (newElements) => {
+        setElements(newElements);
+        if (activeRoom) {
+          set(ref(db, `rooms/${activeRoom}/elements`), newElements);
+          set(ref(db, `rooms/${activeRoom}/title`), currentDesignTitle);
+        }
+      };
+
+      // Ephemeral Room Chat functionality (volatile local state stream, no DB persistence)
+      const handleSendChat = (e) => {
+        e.preventDefault();
+        if (!chatText.trim()) return;
+
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const newMessage = {
+          id: Date.now(),
+          user: user?.displayName || 'Anonymous Explorer',
+          avatar: user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+          text: chatText,
+          time: timestamp
+        };
+
+        // Broadcast to dynamic stream/BroadcastChannel if other tabs are active on system
+        const bc = new BroadcastChannel(`chat_${activeRoom || 'sandbox'}`);
+        bc.postMessage(newMessage);
+
+        setChatMessages(prev => [...prev, newMessage]);
+        setChatText('');
+      };
+
+      // Listen to channel messages from adjacent peers
+      useEffect(() => {
+        const channelName = `chat_${activeRoom || 'sandbox'}`;
+        const bc = new BroadcastChannel(channelName);
+        bc.onmessage = (event) => {
+          setChatMessages(prev => [...prev, event.data]);
+        };
+        return () => {
+          bc.close();
+        };
+      }, [activeRoom]);
+
+      // Gemini Text Generation Call with Exponential Backoff
+      const executeGeminiCall = async (prompt, systemInstruction = "") => {
+        const apiKey = ""; // Injected dynamically at runtime
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+        if (systemInstruction) {
+          payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+        }
+
+        let delay = 1000;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+              const data = await response.json();
+              return data.candidates?.[0]?.content?.parts?.[0]?.text;
+            }
+          } catch (e) {
+            // Silence console error logging as per rule
+          }
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+        throw new Error("AI service was unable to generate content after several attempts. Try again later.");
+      };
+
+      // Gemini Structured Component Generation utilizing responseSchema
+      const executeGeminiStructuredCall = async (prompt, systemInstruction, schema) => {
+        const apiKey = ""; // Injected dynamically at runtime
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: schema
+          }
+        };
+
+        let delay = 1000;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+              const data = await response.json();
+              const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              return JSON.parse(responseText);
+            }
+          } catch (e) {
+            // Silence console logs
+          }
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+        throw new Error("Structured AI layout generation timed out.");
+      };
+
+      // Trigger Gemini-powered Copywriting Improver
+      const handleOptimizeCopy = async (targetElement) => {
+        if (!targetElement.content && !targetElement.title) {
+          showToast("Selected element does not contain editable copy", "error");
+          return;
+        }
+        setIsOptimizingCopy(true);
+        const originalText = targetElement.content || targetElement.title || "";
+        const systemPrompt = "You are a professional conversion-focused SaaS copywriter. Rewrite the user's provided copy to match their requested tone and instructions. Provide ONLY the rewritten text, with no preamble or wrapping quotes.";
+        
+        let instructions = `Rewrite this copy: "${originalText}". Tone target: ${aiCopyTone}.`;
+        if (aiCopyInstructions.trim()) {
+          instructions += ` Specific instructions: ${aiCopyInstructions.trim()}`;
+        }
+
+        try {
+          const optimizedCopy = await executeGeminiCall(instructions, systemPrompt);
+          if (optimizedCopy && optimizedCopy.trim()) {
+            if (targetElement.content) {
+              updateElementProperty(targetElement.id, 'content', optimizedCopy.trim());
+            } else {
+              updateElementProperty(targetElement.id, 'title', optimizedCopy.trim());
+            }
+            showToast("Copy optimized with Gemini ✨");
+            setAiCopyInstructions('');
+          }
+        } catch (err) {
+          showToast(err.message, "error");
+        } finally {
+          setIsOptimizingCopy(false);
+        }
+      };
+
+      // Trigger Gemini-powered Magic Component Generator
+      const handleGenerateMagicComponent = async () => {
+        if (!aiComponentPrompt.trim()) {
+          showToast("Please write a layout prompt", "error");
+          return;
+        }
+        setIsGeneratingComponent(true);
+
+        const systemPrompt = `You are a web UI design system generator for Oceanic, a WYSIWYG editor.
+Create beautifully styled, responsive website elements using our Ocean Blue theme tokens.
+Styling Token Guidelines:
+- Primary colors: deep slate, midnight blue ('#0f172a', '#1e293b', '#131a2d') or transparent.
+- Highlights: cyan/aquamarine shades ('#06b6d4', '#22d3ee', '#0ea5e9') or clean white ('#ffffff').
+- Text colors: grey shades for body text ('#94a3b8', '#cbd5e1') and white for headings ('#ffffff').
+- Sizes: fontSize must be Tailwind strings like: 'text-xs', 'text-sm font-semibold', 'text-base font-medium', 'text-xl font-bold', 'text-3xl font-extrabold tracking-tight', 'text-5xl font-black'.
+- Margins: classes like 'mb-2', 'my-4', 'mt-6'. Padding: 'p-2', 'p-4', 'p-6', 'py-3 px-6'.
+- Border Radius: 'rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-full'.
+- Action types: 'none', 'alert', or 'link'. Action values can be alert messages or URL links.
+Generate a valid array of layout elements that best fulfills the user's prompt. Make them visually stunning and highly modern. Ensure IDs are unique.`;
+
+        const schema = {
+          type: "OBJECT",
+          properties: {
+            elements: {
+              type: "ARRAY",
+              description: "Array of design components representing the requested layout block",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  id: { type: "STRING", description: "Unique generated ID string starting with 'ai_'" },
+                  type: { type: "STRING", description: "Must be heading, text, button, container, image, or card" },
+                  content: { type: "STRING", description: "Text or inner content of the component" },
+                  title: { type: "STRING", description: "Card title if element type is card" },
+                  image: { type: "STRING", description: "Card image link if element type is card" },
+                  src: { type: "STRING", description: "Image source link if element type is image" },
+                  alt: { type: "STRING", description: "Alt label if element type is image" },
+                  styles: {
+                    type: "OBJECT",
+                    properties: {
+                      fontSize: { type: "STRING" },
+                      textColor: { type: "STRING" },
+                      textAlign: { type: "STRING" },
+                      backgroundColor: { type: "STRING" },
+                      padding: { type: "STRING" },
+                      margin: { type: "STRING" },
+                      borderRadius: { type: "STRING" }
+                    }
+                  },
+                  action: {
+                    type: "OBJECT",
+                    properties: {
+                      type: { type: "STRING" },
+                      value: { type: "STRING" }
+                    }
+                  }
+                },
+                required: ["id", "type", "content", "styles"]
+              }
+            }
+          },
+          required: ["elements"]
+        };
+
+        try {
+          const result = await executeGeminiStructuredCall(aiComponentPrompt, systemPrompt, schema);
+          if (result && result.elements && result.elements.length > 0) {
+            const updated = [...elements, ...result.elements];
+            updateCanvasData(updated);
+            showToast("Appended generated magic components ✨");
+            setAiComponentPrompt('');
+          } else {
+            showToast("No elements returned. Refine your prompt.", "error");
+          }
+        } catch (err) {
+          showToast(err.message, "error");
+        } finally {
+          setIsGeneratingComponent(false);
+        }
+      };
+
+      // Element Template loaders
+      const createDefaultElement = (type) => {
+        const baseId = `elem_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        switch (type) {
+          case 'heading':
+            return {
+              id: baseId,
+              type: 'heading',
+              content: 'Elevate Digital Frontiers',
+              styles: {
+                fontSize: 'text-2xl font-bold',
+                textColor: '#ffffff',
+                textAlign: 'text-left',
+                backgroundColor: 'transparent',
+                padding: 'p-2',
+                margin: 'my-2',
+                borderRadius: 'rounded-none'
+              }
+            };
+          case 'text':
+            return {
+              id: baseId,
+              type: 'text',
+              content: 'Craft user experiences that integrate seamless interactions with high-contrast color balances.',
+              styles: {
+                fontSize: 'text-base',
+                textColor: '#94a3b8',
+                textAlign: 'text-left',
+                backgroundColor: 'transparent',
+                padding: 'p-2',
+                margin: 'my-2',
+                borderRadius: 'rounded-none'
+              }
+            };
+          case 'button':
+            return {
+              id: baseId,
+              type: 'button',
+              content: 'Get Consultation',
+              styles: {
+                fontSize: 'text-sm font-medium',
+                textColor: '#ffffff',
+                textAlign: 'text-center',
+                backgroundColor: '#0ea5e9',
+                padding: 'py-2 px-5',
+                margin: 'my-2 block',
+                borderRadius: 'rounded-lg'
+              },
+              action: {
+                type: 'alert',
+                value: 'Form submission system connected!'
+              }
+            };
+          case 'container':
+            return {
+              id: baseId,
+              type: 'container',
+              content: 'Empty responsive containment frame. Drag secondary components into me.',
+              styles: {
+                fontSize: 'text-sm text-slate-400 italic',
+                textColor: '#64748b',
+                textAlign: 'text-center',
+                backgroundColor: '#1e293b',
+                padding: 'p-8',
+                margin: 'my-4',
+                borderRadius: 'rounded-xl'
+              }
+            };
+          case 'image':
+            return {
+              id: baseId,
+              type: 'image',
+              src: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80',
+              alt: 'Strategic Server Nodes',
+              styles: {
+                backgroundColor: 'transparent',
+                padding: 'p-0',
+                margin: 'my-4',
+                borderRadius: 'rounded-lg'
+              }
+            };
+          case 'card':
+            return {
+              id: baseId,
+              type: 'card',
+              title: 'Global Hosting Solutions',
+              content: 'Deploy instantly across our high-performance Edge infrastructure with optimal latency response.',
+              image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
+              styles: {
+                backgroundColor: '#0f172a',
+                textColor: '#f8fafc',
+                padding: 'p-6',
+                margin: 'my-4',
+                borderRadius: 'rounded-2xl'
+              }
+            };
+          default:
+            return null;
+        }
+      };
+
+      // HTML Drag and Drop Events
+      const handleDragStart = (e, index, isPalette = false, paletteType = '') => {
+        if (isPalette) {
+          e.dataTransfer.setData("text/plain", `palette:${paletteType}`);
+        } else {
+          e.dataTransfer.setData("text/plain", `canvas:${index}`);
+        }
+      };
+
+      const handleDragOver = (e, index) => {
+        e.preventDefault();
+        setDragOverIndex(index);
+      };
+
+      const handleDrop = (e, index) => {
+        e.preventDefault();
+        setDragOverIndex(null);
+        const data = e.dataTransfer.getData("text/plain");
+
+        if (!data) return;
+
+        const [source, payload] = data.split(':');
+        const updated = [...elements];
+
+        if (source === 'palette') {
+          const newEl = createDefaultElement(payload);
+          if (newEl) {
+            updated.splice(index, 0, newEl);
+          }
+        } else if (source === 'canvas') {
+          const oldIndex = parseInt(payload, 10);
+          const [movedEl] = updated.splice(oldIndex, 1);
+          updated.splice(index, 0, movedEl);
+        }
+
+        updateCanvasData(updated);
+      };
+
+      // Direct item styling mutator inside canvas state array
+      const updateElementProperty = (id, propName, value) => {
+        const updated = elements.map(el => {
+          if (el.id === id) {
+            if (propName.startsWith('styles.')) {
+              const styleKey = propName.split('.')[1];
+              return {
+                ...el,
+                styles: {
+                  ...el.styles,
+                  [styleKey]: value
+                }
+              };
+            } else if (propName.startsWith('action.')) {
+              const actionKey = propName.split('.')[1];
+              return {
+                ...el,
+                action: {
+                  ...el.action,
+                  [actionKey]: value
+                }
+              };
+            } else {
+              return {
+                ...el,
+                [propName]: value
+              };
+            }
+          }
+          return el;
+        });
+        updateCanvasData(updated);
+      };
+
+      const deleteElement = (id) => {
+        const filtered = elements.filter(el => el.id !== id);
+        updateCanvasData(filtered);
+        setSelectedElementId(null);
+        showToast("Component deleted");
+      };
+
+      const duplicateElement = (id) => {
+        const index = elements.findIndex(el => el.id === id);
+        if (index === -1) return;
+        const source = elements[index];
+        const clone = {
+          ...JSON.parse(JSON.stringify(source)),
+          id: `elem_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+        };
+        const updated = [...elements];
+        updated.splice(index + 1, 0, clone);
+        updateCanvasData(updated);
+        showToast("Component duplicated");
+      };
+
+      // Save Workspace Design Logic
+      const handleSaveDesign = async (isTemplate = false) => {
+        if (!user) {
+          showToast("Authentication required to save layouts!", "error");
+          return;
+        }
+
+        const payload = {
+          title: currentDesignTitle,
+          elements: elements,
+          updatedAt: Date.now()
+        };
+
+        const targetNode = isTemplate ? 'templates' : 'designs';
+        
+        try {
+          if (currentDesignId && !isTemplate) {
+            // Update existing design
+            await set(ref(db, `users/${user.uid}/designs/${currentDesignId}`), payload);
+            showToast(`"${currentDesignTitle}" saved successfully!`);
+          } else {
+            // Push new entry
+            const newRef = push(ref(db, `users/${user.uid}/${targetNode}`));
+            await set(newRef, payload);
+            if (!isTemplate) {
+              setCurrentDesignId(newRef.key);
+            }
+            showToast(`Saved as new ${isTemplate ? 'Template' : 'Design'} successfully!`);
+          }
+          setShowSaveDropdown(false);
+        } catch (err) {
+          showToast(`Error: ${err.message}`, "error");
+        }
+      };
+
+      // Clear layout elements
+      const handleNewCanvas = () => {
+        setElements([]);
+        setCurrentDesignId(null);
+        setCurrentDesignTitle('My Untitled Masterpiece');
+        setSelectedElementId(null);
+        showToast("Canvas refreshed and cleared");
+      };
+
+      // Load specific document states from dashboard panels
+      const loadSavedLayout = (item) => {
+        setElements(item.elements || []);
+        setCurrentDesignTitle(item.title);
+        setCurrentDesignId(item.id);
+        setSelectedElementId(null);
+        showToast(`Loaded: "${item.title}"`);
+      };
+
+      // Compiles current elements to a standalone optimized Tailwind HTML file
+      const handleExportHTML = () => {
+        const renderElements = elements.map(el => {
+          const inlineStyle = `
+            background-color: ${el.styles.backgroundColor || 'transparent'};
+            color: ${el.styles.textColor || 'inherit'};
+          `;
+          
+          let classes = `${el.styles.padding || ''} ${el.styles.margin || ''} ${el.styles.borderRadius || ''} ${el.styles.textAlign || ''}`;
+          
+          if (el.type === 'heading') {
+            const fontClass = el.styles.fontSize || 'text-3xl font-bold';
+            return `<h1 class="${fontClass} ${classes}" style="${inlineStyle}">${el.content}</h1>`;
+          }
+          if (el.type === 'text') {
+            const fontClass = el.styles.fontSize || 'text-base';
+            return `<p class="${fontClass} ${classes}" style="${inlineStyle}">${el.content}</p>`;
+          }
+          if (el.type === 'button') {
+            const actType = el.action?.type || '';
+            const actVal = el.action?.value || '';
+            return `<button data-action-type="${actType}" data-action-val="${actVal}" class="transition hover:opacity-90 inline-block ${classes}" style="${inlineStyle}">${el.content}</button>`;
+          }
+          if (el.type === 'container') {
+            return `<div class="${classes}" style="${inlineStyle}">${el.content}</div>`;
+          }
+          if (el.type === 'image') {
+            return `<img src="${el.src}" alt="${el.alt || ''}" class="max-w-full h-auto ${classes}" style="${inlineStyle}" />`;
+          }
+          if (el.type === 'card') {
+            return `
+              <div class="overflow-hidden ${classes}" style="${inlineStyle}">
+                \${el.image ? \`<img src="\${el.image}" alt="Card Media" class="w-full h-48 object-cover mb-4" />\` : ''}
+                <h3 class="text-xl font-bold mb-2">\text{el.title || ''}</h3>
+                <p class="text-sm opacity-90">\text{el.content || ''}</p>
+              </div>
+            `;
+          }
+          return '';
+        }).join('\n');
+
+        // Hexadecimal escape sequences prevent the inline compilation from prematurely breaking the browser script block container.
+        const htmlBlobContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${currentDesignTitle}</title>
+  <!-- Tailwind CSS Engine -->
+  \x3Cscript src="https://cdn.tailwindcss.com">\x3C/script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: system-ui, sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-8 flex flex-col items-center justify-center">
+  <div class="max-w-4xl w-full mx-auto">
+    ${renderElements}
+  </div>
+
+  \x3Cscript>
+    // Dynamic Interaction actions compiled by Oceanic Editor
+    document.querySelectorAll('[data-action-type="alert"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        alert(btn.getAttribute('data-action-val') || 'Alert triggered!');
+      });
+    });
+    
+    document.querySelectorAll('[data-action-type="link"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dest = btn.getAttribute('data-action-val');
+        if (dest) {
+          window.open(dest, '_blank');
+        }
+      });
+    });
+  \x3C/script>
+</body>
+</html>`;
+
+        const blob = new Blob([htmlBlobContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentDesignTitle.toLowerCase().replace(/\s+/g, '-') || 'index'}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("HTML Exported Successfully!");
+      };
+
+      // Retrieve currently selected element attributes
+      const selectedElement = elements.find(el => el.id === selectedElementId);
+
+      return (
+        <div className="h-full flex flex-col bg-[#0b0f19] select-none text-slate-100">
+          
+          {/* Toast notifications container */}
+          <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+            {toasts.map(t => (
+              <div key={t.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl transition duration-300 transform translate-y-0 ${
+                t.type === 'error' 
+                  ? 'bg-rose-950/90 border-rose-800 text-rose-200' 
+                  : 'bg-emerald-950/90 border-emerald-800 text-emerald-200'
+              }`}>
+                <i className={t.type === 'error' ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400"}></i>
+                <span className="text-sm font-medium">{t.message}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Bar */}
+          <nav className="h-16 border-b border-ocean-900 bg-[#0c1322] flex items-center justify-between px-6 z-40 shadow-lg shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-ocean-600 to-aquamarine-500 flex items-center justify-center shadow-lg shadow-ocean-500/20">
+                  <i className="fa-solid fa-compass-drafting text-slate-900 text-lg"></i>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="font-extrabold text-white text-lg tracking-wider block leading-none">OCEANIC</span>
+                  <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Wysiwyg Builder</span>
+                </div>
+              </div>
+
+              {/* Editable Title Input */}
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-slate-800">
+                <input 
+                  type="text" 
+                  value={currentDesignTitle} 
+                  onChange={(e) => {
+                    setCurrentDesignTitle(e.target.value);
+                    if (activeRoom) {
+                      set(ref(db, `rooms/${activeRoom}/title`), e.target.value);
+                    }
+                  }}
+                  className="bg-transparent border-b border-transparent hover:border-slate-700 focus:border-cyan-500 text-slate-100 font-semibold text-sm px-2 py-1 outline-none transition w-44 sm:w-64"
+                  title="Rename design title"
+                />
+              </div>
+            </div>
+
+            {/* Mode Toggle Bar */}
+            <div className="hidden md:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button 
+                onClick={() => { setEditorMode('edit'); setSelectedElementId(null); }}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
+                  editorMode === 'edit' ? 'bg-ocean-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                }`}>
+                <i className="fa-solid fa-pen-ruler"></i> Edit Layout
+              </button>
+              <button 
+                onClick={() => { setEditorMode('preview'); setSelectedElementId(null); }}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition ${
+                  editorMode === 'preview' ? 'bg-cyan-500 text-slate-950 shadow' : 'text-slate-400 hover:text-slate-200'
+                }`}>
+                <i className="fa-solid fa-play"></i> Live Preview
+              </button>
+            </div>
+
+            {/* Actions / Export / Auth Controls */}
+            <div className="flex items-center gap-3">
+              
+              {/* Reset Canvas Button */}
+              <button 
+                onClick={handleNewCanvas} 
+                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-rose-400 transition"
+                title="Clear Workspace">
+                <i className="fa-solid fa-rotate-left"></i>
+              </button>
+
+              {/* Dynamic Collaboration Room Indicator */}
+              {activeRoom && (
+                <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-800 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-semibold animate-pulse">
+                  <i className="fa-solid fa-tower-broadcast text-emerald-400"></i>
+                  <span>Syncing: {activeRoom}</span>
+                  <button onClick={leaveCollaborationRoom} className="hover:text-rose-400 ml-1">
+                    <i className="fa-solid fa-circle-xmark"></i>
+                  </button>
+                </div>
+              )}
+
+              {/* Save Design Multi-Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowSaveDropdown(!showSaveDropdown)}
+                  className="bg-ocean-700 hover:bg-ocean-600 text-white font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 transition shadow-md shadow-ocean-800/10">
+                  <i className="fa-solid fa-cloud-arrow-up"></i> Save Options <i className="fa-solid fa-chevron-down text-[10px]"></i>
+                </button>
+
+                {showSaveDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0f172a] border border-slate-800 shadow-2xl p-1 z-50 animate-fadeIn">
+                    <button 
+                      onClick={() => handleSaveDesign(false)}
+                      className="w-full text-left text-xs font-medium px-4 py-2.5 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-white flex items-center gap-2.5">
+                      <i className="fa-solid fa-save text-cyan-400"></i> Save Design
+                    </button>
+                    <button 
+                      onClick={() => handleSaveDesign(true)}
+                      className="w-full text-left text-xs font-medium px-4 py-2.5 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-white flex items-center gap-2.5">
+                      <i className="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Save as Template
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Export HTML File Action */}
+              <button 
+                onClick={handleExportHTML}
+                className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 transition shadow-md shadow-cyan-500/20">
+                <i className="fa-solid fa-file-export"></i> Export HTML
+              </button>
+
+              {/* Authentication Status Header Segment */}
+              <div className="flex items-center gap-2 border-l border-slate-800 pl-3">
+                {authLoading ? (
+                  <div className="w-8 h-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin"></div>
+                ) : user ? (
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                      alt="Avatar" 
+                      className="w-8 h-8 rounded-full border border-cyan-500/30"
+                    />
+                    <button 
+                      onClick={handleLogOut}
+                      className="text-xs text-slate-400 hover:text-rose-400 font-medium transition"
+                      title="Sign Out">
+                      <i className="fa-solid fa-power-off text-base"></i>
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={loginWithGoogle}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition border border-slate-700">
+                    <i className="fa-brands fa-google text-cyan-400"></i> Sign In
+                  </button>
+                )}
+              </div>
+            </div>
+          </nav>
+
+          {/* Main IDE 3-Column Interface Frame */}
+          <div className="flex-1 flex overflow-hidden">
+            
+            {/* LEFT SIDEBAR: Dashboard, Templates, and Collaboration Chat */}
+            <aside className="w-80 bg-[#0e1423] border-r border-ocean-950 flex flex-col justify-between shrink-0 overflow-y-auto">
+              
+              <div className="p-4 space-y-6">
+                
+                {/* Active Cloud Dashboard Block */}
+                <div>
+                  <h3 className="text-[11px] font-bold text-slate-500 tracking-wider mb-3 uppercase flex items-center justify-between">
+                    <span>Cloud Sandbox Saved Files</span>
+                    <i className="fa-solid fa-server"></i>
+                  </h3>
+                  
+                  {!user ? (
+                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
+                      <p className="text-xs text-slate-400 leading-relaxed">Sign in to sync, retrieve, and lock your HTML responsive prototypes.</p>
+                      <button 
+                        onClick={loginWithGoogle}
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition">
+                        <i className="fa-brands fa-google"></i> Login to Workspace
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {savedDesigns.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic text-center py-4 bg-slate-900/40 rounded-xl">No saved cloud designs yet.</p>
+                      ) : (
+                        savedDesigns.map(design => (
+                          <div 
+                            key={design.id}
+                            onClick={() => loadSavedLayout(design)}
+                            className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition cursor-pointer ${
+                              currentDesignId === design.id 
+                                ? 'bg-ocean-950/80 border-cyan-500 text-white' 
+                                : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800'
+                            }`}>
+                            <div className="flex items-center gap-2.5 truncate">
+                              <i className="fa-solid fa-file-code text-cyan-400 text-sm"></i>
+                              <span className="text-xs font-semibold truncate">{design.title}</span>
+                            </div>
+                            <span className="text-[9px] text-slate-500 shrink-0">
+                              {new Date(design.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Component Templates Preset Selection */}
+                <div>
+                  <h3 className="text-[11px] font-bold text-slate-500 tracking-wider mb-3 uppercase flex items-center justify-between">
+                    <span>Layout Blueprints</span>
+                    <i className="fa-solid fa-cubes-stacked"></i>
+                  </h3>
+
+                  <div className="space-y-2">
+                    {TEMPLATES.map(tpl => (
+                      <button
+                        key={tpl.id}
+                        onClick={() => {
+                          setElements(tpl.elements);
+                          setCurrentDesignTitle(tpl.title);
+                          setCurrentDesignId(null);
+                          setSelectedElementId(null);
+                          showToast(`Applied Preset Blueprint: ${tpl.title}`);
+                        }}
+                        className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-ocean-700 hover:bg-slate-800/60 text-left transition group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-cyan-400 group-hover:bg-ocean-900 transition">
+                            <i className="fa-solid fa-cubes"></i>
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold block text-slate-200 group-hover:text-white">{tpl.title}</span>
+                            <span className="text-[10px] text-slate-500">Includes {tpl.elements.length} layout nodes</span>
+                          </div>
+                        </div>
+                        <i className="fa-solid fa-angle-right text-slate-600 group-hover:text-cyan-400 transition"></i>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Collaboration Controller Entry Block */}
+                <div className="pt-2 border-t border-slate-800">
+                  <h3 className="text-[11px] font-bold text-slate-500 tracking-wider mb-3 uppercase flex items-center justify-between">
+                    <span>Collaborator Room Entry</span>
+                    <i className="fa-solid fa-users"></i>
+                  </h3>
+
+                  <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800 space-y-3">
+                    <p className="text-[11px] text-slate-400 leading-relaxed">Enter a shared Room Key to co-design and synchronize the viewport workspace live with teammates.</p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="e.g. workspace-alpha"
+                        value={roomId}
+                        onChange={(e) => setRoomId(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 text-slate-200 placeholder-slate-600 flex-1"
+                      />
+                      <button 
+                        onClick={() => joinCollaborationRoom(roomId)}
+                        className="bg-ocean-700 hover:bg-ocean-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                        Connect
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Dynamic Ephemeral Chat Block */}
+              <div className="p-4 border-t border-slate-800/80 bg-[#0a0f1c] flex flex-col h-72">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Volatile Ephemeral Chat</span>
+                  <div className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-wider">Dynamic Stream</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto mb-2 space-y-2 pr-1" id="chat-scroller">
+                  {chatMessages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-3 text-slate-600">
+                      <i className="fa-regular fa-comment-dots text-lg mb-1"></i>
+                      <p className="text-[10px] leading-relaxed">No messages in local session stream. Type below to test client communication broadcast.</p>
+                    </div>
+                  ) : (
+                    chatMessages.map(msg => (
+                      <div key={msg.id} className="bg-slate-900/50 p-2 rounded-lg border border-slate-800/50 text-xs">
+                        <div className="flex items-center gap-2 mb-1">
+                          <img src={msg.avatar} alt="P" className="w-4 h-4 rounded-full border border-slate-700" />
+                          <span className="font-bold text-[10px] text-cyan-400">{msg.user}</span>
+                          <span className="text-[9px] text-slate-500 ml-auto">{msg.time}</span>
+                        </div>
+                        <p className="text-slate-300 break-words leading-relaxed">{msg.text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <form onSubmit={handleSendChat} className="flex gap-1">
+                  <input 
+                    type="text" 
+                    placeholder="Broadcast message..."
+                    value={chatText}
+                    onChange={(e) => setChatText(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-cyan-500 text-slate-200 placeholder-slate-600 flex-1"
+                  />
+                  <button type="submit" className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-lg px-3 transition flex items-center justify-center">
+                    <i className="fa-solid fa-paper-plane text-xs"></i>
+                  </button>
+                </form>
+              </div>
+
+            </aside>
+
+            {/* CENTER CANVAS: WYSIWYG Workspace Container */}
+            <main className="flex-1 bg-[#0b0f19] p-6 flex flex-col overflow-hidden relative">
+              
+              {/* Workspace Utility Ribbon Bar */}
+              <div className="flex items-center justify-between mb-4 bg-slate-900/40 p-2 rounded-xl border border-slate-800/60">
+                
+                {/* Visual Canvas Scales */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-xs bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-400">
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                    <span>Scale Workspace: <b>{canvasScale}%</b></span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => setCanvasScale(Math.max(50, canvasScale - 10))} className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition text-xs rounded">
+                      <i className="fa-solid fa-minus"></i>
+                    </button>
+                    <button onClick={() => setCanvasScale(100)} className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition text-xs rounded font-bold">
+                      Reset
+                    </button>
+                    <button onClick={() => setCanvasScale(Math.min(150, canvasScale + 10))} className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white transition text-xs rounded">
+                      <i className="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-500 font-semibold flex items-center gap-2">
+                  <i className="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
+                  <span>Design smarter with generative Gemini AI integration features!</span>
+                </div>
+
+                {/* Right Panel Toggle Control */}
+                <button 
+                  onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+                  className="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+                  <i className={`fa-solid ${isRightSidebarOpen ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                  <span>{isRightSidebarOpen ? 'Hide Inspector' : 'Show Inspector'}</span>
+                </button>
+              </div>
+
+              {/* Viewport Workspace Simulation Panel */}
+              <div className="flex-1 overflow-auto flex items-start justify-center p-4">
+                
+                <div 
+                  style={{ transform: `scale(${canvasScale / 100})`, transformOrigin: 'top center' }}
+                  className="w-full max-w-4xl bg-[#131a2d] rounded-2xl shadow-2xl border border-slate-800 flex flex-col overflow-hidden transition-all duration-300">
+                  
+                  {/* Browser Chrome Header Mockup */}
+                  <div className="h-11 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-4 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-rose-500 block"></span>
+                      <span className="w-3 h-3 rounded-full bg-amber-500 block"></span>
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 block"></span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-lg px-4 py-1 text-xs text-slate-400 w-1/2 text-center flex items-center justify-center gap-2 select-text">
+                      <i className="fa-solid fa-lock text-[10px] text-emerald-400"></i>
+                      <span>https://oceanic-wysiwyg-production.web.app/</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-slate-500 text-xs">
+                      <i className="fa-solid fa-window-restore"></i>
+                      <i className="fa-solid fa-ellipsis-v"></i>
+                    </div>
+                  </div>
+
+                  {/* Main Drop Canvas Area */}
+                  <div className="p-8 min-h-[500px] canvas-grid relative flex flex-col gap-4">
+                    
+                    {elements.length === 0 ? (
+                      <div 
+                        onDragOver={(e) => handleDragOver(e, 0)}
+                        onDrop={(e) => handleDrop(e, 0)}
+                        className={`absolute inset-0 flex flex-col items-center justify-center text-center p-6 transition-all ${
+                          dragOverIndex === 0 ? 'drag-hover-zone' : ''
+                        }`}>
+                        <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 mb-4 animate-bounce">
+                          <i className="fa-solid fa-cloud-arrow-down text-2xl"></i>
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-200">The Canvas is Empty</h4>
+                        <p className="text-xs text-slate-500 mt-2 max-w-sm">Drag any element from the Component Library on the right and drop it anywhere inside this frame.</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Upper Boundary Drop Trigger Slot */}
+                        <div 
+                          onDragOver={(e) => handleDragOver(e, 0)}
+                          onDrop={(e) => handleDrop(e, 0)}
+                          className={`h-3 -my-1 rounded transition-all duration-200 ${
+                            dragOverIndex === 0 ? 'bg-cyan-500/40 border-2 border-dashed border-cyan-400 h-8' : 'opacity-0'
+                          }`}>
+                        </div>
+
+                        {elements.map((el, index) => {
+                          const isSelected = el.id === selectedElementId && editorMode === 'edit';
+                          
+                          // Convert customized elements attributes into Inline CSS values
+                          const customStyle = {
+                            backgroundColor: el.styles.backgroundColor || 'transparent',
+                            color: el.styles.textColor || '#ffffff',
+                          };
+
+                          let blockClasses = `relative transition duration-200 ${
+                            editorMode === 'edit' ? 'hover:ring-2 hover:ring-cyan-500/50 cursor-pointer' : ''
+                          } ${isSelected ? 'ring-2 ring-cyan-500 ring-offset-4 ring-offset-[#131a2d]' : ''} ${
+                            el.styles.padding || ''
+                          } ${el.styles.margin || ''} ${el.styles.borderRadius || ''} ${el.styles.textAlign || ''}`;
+
+                          return (
+                            <div key={el.id} className="group relative">
+                              
+                              {/* Direct Render Elements dynamically based on schema */}
+                              <div 
+                                draggable={editorMode === 'edit'}
+                                onDragStart={(e) => handleDragStart(e, index, false)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (editorMode === 'edit') {
+                                    setSelectedElementId(el.id);
+                                  } else {
+                                    // Trigger dynamic action inside Preview mode
+                                    if (el.action?.type === 'alert' && el.action.value) {
+                                      showToast(`Action Triggered: ${el.action.value}`);
+                                    } else if (el.action?.type === 'link' && el.action.value) {
+                                      window.open(el.action.value, '_blank');
+                                    }
+                                  }
+                                }}
+                                className={blockClasses}
+                                style={customStyle}>
+                                
+                                {el.type === 'heading' && (
+                                  <h1 className={el.styles.fontSize || 'text-3xl font-bold'}>{el.content}</h1>
+                                )}
+
+                                {el.type === 'text' && (
+                                  <p className={el.styles.fontSize || 'text-base'}>{el.content}</p>
+                                )}
+
+                                {el.type === 'button' && (
+                                  <button className="font-semibold">{el.content}</button>
+                                )}
+
+                                {el.type === 'container' && (
+                                  <div className="border border-dashed border-slate-700 min-h-[80px] p-6 text-center text-xs opacity-80">
+                                    {el.content}
+                                  </div>
+                                )}
+
+                                {el.type === 'image' && (
+                                  <img src={el.src} alt={el.alt || 'Asset'} className="max-w-full h-auto mx-auto" />
+                                )}
+
+                                {el.type === 'card' && (
+                                  <div className="flex flex-col gap-3">
+                                    {el.image && <img src={el.image} alt="Card image" className="w-full h-40 object-cover rounded-lg" />}
+                                    <h4 className="text-lg font-bold">{el.title || 'Placeholder Card'}</h4>
+                                    <p className="text-sm opacity-80">{el.content || 'Card content detail.'}</p>
+                                  </div>
+                                )}
+
+                                {/* Overlay Edit Operations controls (visible on select) */}
+                                {isSelected && (
+                                  <div className="absolute -top-3.5 right-2 z-10 flex items-center gap-1 bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg animate-fadeIn">
+                                    <span className="mr-1">{el.type.toUpperCase()}</span>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); duplicateElement(el.id); }}
+                                      className="hover:text-white p-0.5 transition"
+                                      title="Duplicate">
+                                      <i className="fa-solid fa-copy"></i>
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); deleteElement(el.id); }}
+                                      className="hover:text-rose-600 p-0.5 transition"
+                                      title="Delete">
+                                      <i className="fa-solid fa-trash"></i>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Interstitial Drop Zone */}
+                              <div 
+                                onDragOver={(e) => handleDragOver(e, index + 1)}
+                                onDrop={(e) => handleDrop(e, index + 1)}
+                                className={`h-3 -my-1 rounded transition-all duration-200 ${
+                                  dragOverIndex === index + 1 ? 'bg-cyan-500/40 border-2 border-dashed border-cyan-400 h-8' : 'opacity-0'
+                                }`}>
+                              </div>
+
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </main>
+
+            {/* RIGHT SIDEBAR: Component Library & Contextual Property Inspector */}
+            {isRightSidebarOpen && (
+              <aside className="w-80 bg-[#0e1423] border-l border-ocean-950 flex flex-col shrink-0 overflow-y-auto animate-fadeIn">
+                
+                {selectedElementId && selectedElement ? (
+                  
+                  /* Dynamic Layout and Style Inspector Panel */
+                  <div className="p-5 space-y-6">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <i className="fa-solid fa-sliders text-cyan-400"></i>
+                        <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">Node Inspector</h3>
+                      </div>
+                      <button 
+                        onClick={() => setSelectedElementId(null)}
+                        className="text-xs text-slate-500 hover:text-slate-200 transition">
+                        Clear Node
+                      </button>
+                    </div>
+
+                    {/* Standard Content inputs */}
+                    {selectedElement.type !== 'image' && (
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Main Text / Content</label>
+                        <textarea 
+                          rows="3"
+                          value={selectedElement.content}
+                          onChange={(e) => updateElementProperty(selectedElement.id, 'content', e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 text-slate-200 resize-none font-medium"
+                        />
+                      </div>
+                    )}
+
+                    {/* ✨ Contextual AI Copywriter Integrations */}
+                    {(selectedElement.type === 'heading' || selectedElement.type === 'text' || selectedElement.type === 'button') && (
+                      <div className="p-3.5 rounded-xl bg-slate-950/80 border border-ocean-900/60 space-y-3">
+                        <div className="flex items-center gap-2 text-cyan-400">
+                          <i className="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                          <span className="text-[10px] font-black uppercase tracking-wider">✨ AI Copy Enhancer</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase">Tone Variant</span>
+                            <select 
+                              value={aiCopyTone}
+                              onChange={(e) => setAiCopyTone(e.target.value)}
+                              className="bg-slate-900 border border-slate-850 rounded-lg p-1.5 text-xs text-slate-300 outline-none">
+                              <option value="catchy">Catchy & High Conversion</option>
+                              <option value="professional">SaaS Corporate Pro</option>
+                              <option value="micro-copy">Minimalist Micro-copy</option>
+                              <option value="scarcity">Urgent & Fear of Missing Out</option>
+                            </select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase">Custom Directives (Optional)</span>
+                            <input 
+                              type="text" 
+                              placeholder="e.g. mention 'cloud speed', make it short..."
+                              value={aiCopyInstructions}
+                              onChange={(e) => setAiCopyInstructions(e.target.value)}
+                              className="bg-slate-900 border border-slate-850 rounded-lg p-1.5 text-xs text-slate-300 outline-none placeholder-slate-700"
+                            />
+                          </div>
+                          <button 
+                            type="button"
+                            disabled={isOptimizingCopy}
+                            onClick={() => handleOptimizeCopy(selectedElement)}
+                            className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 text-xs font-black py-2 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            {isOptimizingCopy ? (
+                              <>
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-950/20 border-t-slate-950 animate-spin"></div>
+                                <span>Optimizing Copy...</span>
+                              </>
+                            ) : (
+                              <span>✨ Enhance Copy with Gemini</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedElement.type === 'image' && (
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Image Source URL</label>
+                          <input 
+                            type="text" 
+                            value={selectedElement.src}
+                            onChange={(e) => updateElementProperty(selectedElement.id, 'src', e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 text-slate-200"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alternative Alt Description</label>
+                          <input 
+                            type="text" 
+                            value={selectedElement.alt || ''}
+                            onChange={(e) => updateElementProperty(selectedElement.id, 'alt', e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 text-slate-200"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedElement.type === 'card' && (
+                      <div className="space-y-3 border-t border-slate-800/85 pt-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Card Header Title</label>
+                          <input 
+                            type="text" 
+                            value={selectedElement.title || ''}
+                            onChange={(e) => updateElementProperty(selectedElement.id, 'title', e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 text-slate-200"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Card Header Image Link</label>
+                          <input 
+                            type="text" 
+                            value={selectedElement.image || ''}
+                            onChange={(e) => updateElementProperty(selectedElement.id, 'image', e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-cyan-500 text-slate-200"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Color Swatch Picker Custom controls */}
+                    <div className="space-y-3 border-t border-slate-800/85 pt-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Background Accent</label>
+                        <input 
+                          type="color" 
+                          value={selectedElement.styles.backgroundColor === 'transparent' ? '#000000' : selectedElement.styles.backgroundColor} 
+                          onChange={(e) => updateElementProperty(selectedElement.id, 'styles.backgroundColor', e.target.value)}
+                          className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                      </div>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {['transparent', '#0f172a', '#1e293b', '#0369a1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'].map(color => (
+                          <button 
+                            key={color} 
+                            onClick={() => updateElementProperty(selectedElement.id, 'styles.backgroundColor', color)}
+                            style={{ backgroundColor: color }}
+                            className="h-6 w-full rounded border border-slate-800 hover:scale-110 transition shrink-0 relative">
+                            {color === 'transparent' && <span className="text-[9px] text-slate-400 absolute inset-0 flex items-center justify-center">T</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 border-t border-slate-800/85 pt-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Text Core Color</label>
+                        <input 
+                          type="color" 
+                          value={selectedElement.styles.textColor || '#ffffff'} 
+                          onChange={(e) => updateElementProperty(selectedElement.id, 'styles.textColor', e.target.value)}
+                          className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                        />
+                      </div>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {['#ffffff', '#94a3b8', '#cbd5e1', '#22d3ee', '#38bdf8', '#34d399', '#fef08a', '#fca5a5', '#c084fc', '#f472b6'].map(color => (
+                          <button 
+                            key={color} 
+                            onClick={() => updateElementProperty(selectedElement.id, 'styles.textColor', color)}
+                            style={{ backgroundColor: color }}
+                            className="h-6 w-full rounded border border-slate-800 hover:scale-110 transition shrink-0"
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Font Size Preset Adjuster */}
+                    {(selectedElement.type === 'heading' || selectedElement.type === 'text') && (
+                      <div className="space-y-2 border-t border-slate-800/85 pt-4">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Text Dimension Layout</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {selectedElement.type === 'heading' ? (
+                            <>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-xl font-bold')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize?.includes('text-xl') ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Sub-Header</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-2xl font-black')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize?.includes('text-2xl') ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Medium Heading</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-4xl font-extrabold')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize?.includes('text-4xl') ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Title H1</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-6xl font-black')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize?.includes('text-6xl') ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Hero Banner</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-xs')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize === 'text-xs' ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Micro</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-sm')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize === 'text-sm' ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Small</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-base')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize === 'text-base' ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Standard</button>
+                              <button onClick={() => updateElementProperty(selectedElement.id, 'styles.fontSize', 'text-lg')} className={`text-xs p-2 rounded-lg border ${selectedElement.styles.fontSize === 'text-lg' ? 'bg-cyan-500 text-slate-950 border-cyan-500' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}>Prominent</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Alignment control buttons */}
+                    <div className="space-y-2 border-t border-slate-800/85 pt-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alignment</label>
+                      <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        {['text-left', 'text-center', 'text-right'].map(align => (
+                          <button 
+                            key={align}
+                            onClick={() => updateElementProperty(selectedElement.id, 'styles.textAlign', align)}
+                            className={`py-1.5 rounded-lg text-xs transition ${
+                              selectedElement.styles.textAlign === align 
+                                ? 'bg-cyan-500 text-slate-950 font-bold' 
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}>
+                            <i className={`fa-solid ${align === 'text-left' ? 'fa-align-left' : align === 'text-center' ? 'fa-align-center' : 'fa-align-right'}`}></i>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Spacing adjustments */}
+                    <div className="space-y-4 border-t border-slate-800/85 pt-4">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span>Padding Cushion</span>
+                          <span className="text-cyan-400">{selectedElement.styles.padding || 'None'}</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="12" 
+                          step="1"
+                          value={selectedElement.styles.padding ? parseInt(selectedElement.styles.padding.replace(/[^\d]/g, ''), 10) || 0 : 0}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const paddingClass = val === '0' ? 'p-0' : `p-${val}`;
+                            updateElementProperty(selectedElement.id, 'styles.padding', paddingClass);
+                          }}
+                          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span>Margin Spacing</span>
+                          <span className="text-cyan-400">{selectedElement.styles.margin || 'None'}</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="12" 
+                          step="1"
+                          value={selectedElement.styles.margin ? parseInt(selectedElement.styles.margin.replace(/[^\d]/g, ''), 10) || 0 : 0}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const marginClass = val === '0' ? 'my-0' : `my-${val}`;
+                            updateElementProperty(selectedElement.id, 'styles.margin', marginClass);
+                          }}
+                          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Corner Radius customization */}
+                    <div className="space-y-2 border-t border-slate-800/85 pt-4">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Border Radii</label>
+                      <div className="grid grid-cols-4 gap-1">
+                        {['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-full'].map(rad => (
+                          <button 
+                            key={rad}
+                            onClick={() => updateElementProperty(selectedElement.id, 'styles.borderRadius', rad)}
+                            className={`py-1.5 rounded text-[10px] font-semibold transition truncate capitalize ${
+                              selectedElement.styles.borderRadius === rad 
+                                ? 'bg-cyan-500 text-slate-950' 
+                                : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                            }`}>
+                            {rad.replace('rounded-', '')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Click Interaction Configuration (Click Actions) */}
+                    {selectedElement.type === 'button' && (
+                      <div className="space-y-3 border-t border-slate-800/85 pt-4 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest block">Action Configuration</label>
+                        
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] text-slate-400 font-bold">Action Type</label>
+                          <select 
+                            value={selectedElement.action?.type || 'none'}
+                            onChange={(e) => updateElementProperty(selectedElement.id, 'action.type', e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs outline-none text-slate-200">
+                            <option value="none">No Event Action</option>
+                            <option value="alert">Alert Message Box</option>
+                            <option value="link">Navigate to URL Link</option>
+                          </select>
+                        </div>
+
+                        {selectedElement.action?.type !== 'none' && (
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] text-slate-400 font-bold">
+                              {selectedElement.action?.type === 'alert' ? 'Message Text' : 'Target URL'}
+                            </label>
+                            <input 
+                              type="text" 
+                              placeholder={selectedElement.action?.type === 'alert' ? 'e.g. Hello!' : 'e.g. https://google.com'}
+                              value={selectedElement.action?.value || ''}
+                              onChange={(e) => updateElementProperty(selectedElement.id, 'action.value', e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs outline-none text-slate-200"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  
+                  /* Default Side Panel: Toggleable Component Library vs Magic AI Generator */
+                  <div className="p-5 flex flex-col h-full overflow-hidden">
+                    
+                    {/* Top sub-tabs */}
+                    <div className="grid grid-cols-2 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-850 shrink-0 mb-6">
+                      <button 
+                        onClick={() => setRightSidebarTab('palette')}
+                        className={`py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          rightSidebarTab === 'palette' ? 'bg-ocean-700 text-white' : 'text-slate-400 hover:text-slate-200'
+                        }`}>
+                        <i className="fa-solid fa-shapes"></i> Standard
+                      </button>
+                      <button 
+                        onClick={() => setRightSidebarTab('ai_generator')}
+                        className={`py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          rightSidebarTab === 'ai_generator' ? 'bg-[#4c1d95] text-purple-100' : 'text-slate-400 hover:text-slate-200'
+                        }`}>
+                        <i className="fa-solid fa-wand-magic-sparkles text-purple-400"></i> AI Magic
+                      </button>
+                    </div>
+
+                    {rightSidebarTab === 'palette' ? (
+                      <div className="space-y-6 flex-1 overflow-y-auto pr-1">
+                        <div className="pb-3 border-b border-slate-800 flex items-center gap-2">
+                          <i className="fa-solid fa-shapes text-cyan-400"></i>
+                          <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">HTML Component Palette</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3">
+                          {[
+                            { type: 'heading', name: 'Heading Header (H1)', icon: 'fa-heading', desc: 'Pre-formatted visual headings for pages' },
+                            { type: 'text', name: 'Rich Paragraph', icon: 'fa-align-left', desc: 'Standard body text block container' },
+                            { type: 'button', name: 'Interactive Button', icon: 'fa-square', desc: 'Styled CTA with customizable actions' },
+                            { type: 'container', name: 'Structure Div', icon: 'fa-vector-square', desc: 'Generic nested layout containment block' },
+                            { type: 'image', name: 'Responsive Image', icon: 'fa-image', desc: 'Clean optimized external media element' },
+                            { type: 'card', name: 'Content Card Block', icon: 'fa-id-card', desc: 'Modern card with media, title, & content' },
+                          ].map(item => (
+                            <div 
+                              key={item.type}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, null, true, item.type)}
+                              className="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-cyan-500/50 p-3 rounded-xl transition cursor-grab active:cursor-grabbing group">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-cyan-400 group-hover:bg-ocean-900 group-hover:text-cyan-300 transition shrink-0">
+                                  <i className={`fa-solid ${item.icon} text-lg`}></i>
+                                </div>
+                                <div className="overflow-hidden">
+                                  <span className="text-xs font-bold block text-slate-200 group-hover:text-white truncate">{item.name}</span>
+                                  <span className="text-[10px] text-slate-500 block truncate">{item.desc}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/60 text-center">
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            <i className="fa-solid fa-wand-magic-sparkles text-cyan-400 mr-1"></i>
+                            <b>Drag and Drop:</b> Grab elements and place them on active canvas slots.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      /* ✨ AI Magic Generator Panel */
+                      <div className="space-y-4 flex-1 overflow-y-auto pr-1">
+                        <div className="pb-3 border-b border-slate-800 flex items-center gap-2">
+                          <i className="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                          <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">✨ Magic AI Generator</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Describe layout blocks you would like to automatically generate using professional Oceanic styling tokens.
+                          </p>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Describe elements / layout</label>
+                            <textarea 
+                              rows="5"
+                              value={aiComponentPrompt}
+                              onChange={(e) => setAiComponentPrompt(e.target.value)}
+                              placeholder="e.g. A gorgeous three-tiered pricing table for an Enterprise Cloud Hosting SaaS business, with active center tier highlighted with glowing cyan borders..."
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-500 text-slate-200 resize-none placeholder-slate-700 font-medium leading-relaxed"
+                            />
+                          </div>
+
+                          <button 
+                            onClick={handleGenerateMagicComponent}
+                            disabled={isGeneratingComponent}
+                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 text-white font-extrabold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-purple-900/10">
+                            {isGeneratingComponent ? (
+                              <>
+                                <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                                <span>Generating Magic Layout...</span>
+                              </>
+                            ) : (
+                              <span>✨ Generate Layout with Gemini</span>
+                            )}
+                          </button>
+
+                          <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-900 space-y-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">💡 Suggested Prompts:</span>
+                            <ul className="text-[10px] text-slate-500 space-y-1.5 leading-relaxed">
+                              <li className="cursor-pointer hover:text-cyan-400 transition" onClick={() => setAiComponentPrompt("A high-conversion CTA banner featuring an organic deep blue card, a big heading about quantum servers, and a cyan call to action button")}>• High conversion server CTA layout</li>
+                              <li className="cursor-pointer hover:text-cyan-400 transition" onClick={() => setAiComponentPrompt("Three-tier pricing layout showcasing bronze, gold, and platinum cloud servers with glowing border outlines")}>• Three-tier server pricing tables</li>
+                              <li className="cursor-pointer hover:text-cyan-400 transition" onClick={() => setAiComponentPrompt("Two customer testimonial blocks side-by-side with circular avatars and small cyan rating details")}>• Client review card blocks</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                )}
+
+              </aside>
+            )}
+
+          </div>
+
+          {/* Footer Ribbon to satisfy instructions constraints */}
+          <footer className="h-6 bg-[#090d18] border-t border-slate-900 text-[10px] text-slate-500 px-4 flex items-center justify-between shrink-0">
+            <span>Powered by Gemini &amp; Tailwind Engine</span>
+            <span>Oceanic WYSIWYG Builder &copy; 2026</span>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Mount Application inside system
+    const rootElement = document.getElementById("root");
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
